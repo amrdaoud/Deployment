@@ -1,0 +1,30 @@
+# Build results
+bin/
+obj/
+*.user
+*.suo
+
+# Visual Studio
+.vs/
+*.dbmdl
+*.psess
+*.vsp
+*.pdb
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# User-specific files
+*.userosscache
+*.sln.docstates
+
+# Logs
+*.log
+
+# Configuration
+appsettings.*.json
+secrets.json
+
+# Publish
+publish/

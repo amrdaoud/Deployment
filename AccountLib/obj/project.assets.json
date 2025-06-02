@@ -5501,24 +5501,31 @@
     ]
   },
   "packageFolders": {
-    "/Users/amrdaoud/.nuget/packages/": {}
+    "C:\\Users\\MIS\\.nuget\\packages\\": {},
+    "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/amrdaoud/Desktop/DotNet/DeploymentSystem/Deployment/AccountLib/AccountLib.csproj",
+      "projectUniqueName": "D:\\TFS\\Syriatel\\Deployment Project\\Deployment\\AccountLib\\AccountLib.csproj",
       "projectName": "AccountLib",
-      "projectPath": "/Users/amrdaoud/Desktop/DotNet/DeploymentSystem/Deployment/AccountLib/AccountLib.csproj",
-      "packagesPath": "/Users/amrdaoud/.nuget/packages/",
-      "outputPath": "/Users/amrdaoud/Desktop/DotNet/DeploymentSystem/Deployment/AccountLib/obj/",
+      "projectPath": "D:\\TFS\\Syriatel\\Deployment Project\\Deployment\\AccountLib\\AccountLib.csproj",
+      "packagesPath": "C:\\Users\\MIS\\.nuget\\packages\\",
+      "outputPath": "D:\\TFS\\Syriatel\\Deployment Project\\Deployment\\AccountLib\\obj\\",
       "projectStyle": "PackageReference",
+      "fallbackFolders": [
+        "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
+      ],
       "configFilePaths": [
-        "/Users/amrdaoud/.nuget/NuGet/NuGet.Config"
+        "C:\\Users\\MIS\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
+        "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
       ],
       "sources": {
+        "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
@@ -5588,7 +5595,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.200/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.204/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
