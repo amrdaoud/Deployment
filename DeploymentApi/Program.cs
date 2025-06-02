@@ -4,12 +4,12 @@ using AccountLib.Infrastructure.Seed;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+
+
 // From AccountLib
 builder.Services.AddAccountIdentity(builder.Configuration, "DefaultConnection");
-
 
 builder.Services.AddSwaggerGen(options =>
 {

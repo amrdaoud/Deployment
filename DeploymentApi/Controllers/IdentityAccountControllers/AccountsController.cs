@@ -10,6 +10,8 @@ namespace DeploymentApi.Controllers.IdentityAccountControllers
 	{
 		private readonly IIdentityAccountService _IdentityAccountService = IdentityAccountService;
 
+
+
 		[HttpPost("register")]
 		public async Task<IActionResult> Register(RegisterRequest request)
 		{
@@ -19,6 +21,18 @@ namespace DeploymentApi.Controllers.IdentityAccountControllers
 				return BadRequest(new { result.Message });
 
 			return Ok();
+		}
+
+
+		[HttpPost("login")]
+		public async Task<IActionResult> Login(LoginRequest request)
+		{
+			var result = await _IdentityAccountService.LoginAsync(request);
+
+			if (!string.IsNullOrEmpty(result.Message))
+				return BadRequest(new { result.Message });
+
+			return Ok(result);
 		}
 	}
 }
