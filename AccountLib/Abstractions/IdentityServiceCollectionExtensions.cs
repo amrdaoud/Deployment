@@ -9,23 +9,21 @@ using AccountLib.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using AccountLib.Contracts;
+using AccountLib.Services.EmailSenderService;
 namespace AccountLib.Abstractions
 {
 	public static class IdentityServiceCollectionExtensions
 	{
-		public static IServiceCollection AddAccountIdentity(this IServiceCollection services, IConfiguration configuration, string connectionString)
+		public static IServiceCollection AddAccountIdentity(this IServiceCollection services, AccountIdentityParams accountIdentityParams)
 		{
-			services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(configuration.GetConnectionString(connectionString)));
+			services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(accountIdentityParams.ConfigurationManager.GetConnectionString(accountIdentityParams.ConnectionString)));
 
 			services.AddIdentity<ApplicationUser, ApplicationRole>()
 				.AddEntityFrameworkStores<ApplicationDbContext>()
 				.AddDefaultTokenProviders();
 
-
 			// JWT Settings
-			services.Configure<JwtSettings>(configuration.GetSection("JwtSettings"));
-			var jwtSettings = configuration.GetSection("JwtSettings").Get<JwtSettings>();
-
 			services.AddAuthentication(options =>
 			{
 				options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -39,13 +37,14 @@ namespace AccountLib.Abstractions
 					ValidateAudience = true,
 					ValidateLifetime = true,
 					ValidateIssuerSigningKey = true,
-					ValidIssuer = jwtSettings!.Issuer,
-					ValidAudience = jwtSettings.Audience,
-					IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Key))
+					ValidIssuer = accountIdentityParams.JwtSettings.Issuer,
+					ValidAudience = accountIdentityParams.JwtSettings.Audience,
+					IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(accountIdentityParams.JwtSettings.Key))
 				};
 			});
 
 			services.AddScoped<IIdentityAccountService, IdentityAccountService>();
+			services.AddTransient<IEmailSender, EmailSender>();
 
 			return services;
 		}

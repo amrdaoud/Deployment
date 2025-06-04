@@ -1,4 +1,6 @@
 using AccountLib.Abstractions;
+using AccountLib.Configuration;
+using AccountLib.Contracts;
 using AccountLib.Infrastructure.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -6,10 +8,18 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 
 
-// From AccountLib
-builder.Services.AddAccountIdentity(builder.Configuration, "DefaultConnection");
+// Account Identity -> From AccountLib
+AccountIdentityParams accountIdentityParams = new()
+{
+	ConfigurationManager = builder.Configuration,
+	ConnectionString = "DefaultConnection",
+	JwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()!
+};
+builder.Services.AddAccountIdentity(accountIdentityParams);
 
 builder.Services.AddSwaggerGen(options =>
 {

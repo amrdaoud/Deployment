@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AccountLib")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c47082b494028c4d0a812d40d366092f7683fb17")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+c5226b90d7f90e81cef12780f412f55820d984ef")]
 [assembly: System.Reflection.AssemblyProductAttribute("AccountLib")]
 [assembly: System.Reflection.AssemblyTitleAttribute("AccountLib")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

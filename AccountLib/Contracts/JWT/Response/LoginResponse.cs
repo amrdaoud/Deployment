@@ -7,6 +7,9 @@
 		public bool IsAuthenticated { get; set; }
 		public string? Token { get; set; }
 		public DateTime? TokenExpiry { get; set; }
+		public List<string> Roles { get; set; } = [];
+		public List<string> Tenants { get; set; } = [];
+
 
 		//public string? RefreshToken { get; set; }
 		//public DateTime? RefreshTokenExpiry { get; set; }
