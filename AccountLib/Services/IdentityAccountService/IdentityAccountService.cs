@@ -178,5 +178,19 @@ namespace AccountLib.Services.IdentityAccountService
 
 			return new ResultWithMessage(null, string.Empty);
 		}
+		public async Task<ResultWithMessage> ChangePasswordAsync(ChangePasswordRequest request)
+		{
+			var user = await _userManager.FindByEmailAsync(request.Email);
+
+			if (user is null)
+				return new ResultWithMessage(null, IdentityAccountErrors.UserNotFound);
+
+			var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+
+			if (!result.Succeeded)
+				return new ResultWithMessage(null, result.Errors.First().Description);
+
+			return new ResultWithMessage(null, string.Empty);
+		}
 	}
 }

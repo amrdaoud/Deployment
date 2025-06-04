@@ -1,6 +1,5 @@
 ﻿using AccountLib.Contracts.IdentityAccount.Request;
 using AccountLib.Contracts;
-using Microsoft.AspNetCore.Identity;
 
 
 
@@ -12,8 +11,6 @@ namespace AccountLib.Services.IdentityAccountService
 		Task<ResultWithMessage> LoginAsync(LoginRequest request);
 		Task<ResultWithMessage> SendResetPasswordEmailAsync(SendResetPasswordEmailRequest request);
 		Task<ResultWithMessage> ResetPasswordAsync(ResetPasswordRequest request);
-
-
-		//Task<ChangePasswordResult> ChangePasswordAsync(ChangePasswordRequest request);
+		Task<ResultWithMessage> ChangePasswordAsync(ChangePasswordRequest request);
 	}
 }

@@ -60,5 +60,13 @@ namespace DeploymentApi.Controllers.IdentityAccountControllers
 				Token = token
 			});
 		}
+
+
+		[HttpPost("changePassword")]
+		public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
+		{
+			var result = await _IdentityAccountService.ChangePasswordAsync(request);
+			return HandleResult(result);
+		}
 	}
 }
