@@ -2,16 +2,20 @@
 {
 	public class LoginResponse
 	{
-		public string? UserName { get; set; }
-		public string? Email { get; set; }
+		public string UserName { get; set; } = string.Empty;
+		public string Email { get; set; } = string.Empty;
 		public bool IsAuthenticated { get; set; }
-		public string? Token { get; set; }
-		public DateTime? TokenExpiry { get; set; }
 		public List<string> Roles { get; set; } = [];
 		public List<string> Tenants { get; set; } = [];
 
 
-		//public string? RefreshToken { get; set; }
-		//public DateTime? RefreshTokenExpiry { get; set; }
+		// Token
+		public string Token { get; set; } = string.Empty;
+		public DateTime TokenExpiry { get; set; }
+
+
+		// Refresh Token
+		public string RefreshToken { get; set; } = string.Empty;
+		public DateTime? RefreshTokenExpiry { get; set; }
 	}
 }

@@ -15,8 +15,10 @@ namespace AccountLib.Data
 																						IdentityRoleClaim<Guid>,
 																						IdentityUserToken<Guid>>(options)
 	{
-		public DbSet<ApplicationTenant> Tenants => Set<ApplicationTenant>();
-		public DbSet<ApplicationUserTenantRole> UserTenantRoles => Set<ApplicationUserTenantRole>();
+		public DbSet<ApplicationTenant> Tenants { get; set; }
+		public DbSet<ApplicationUserTenantRole> UserTenantRoles { get; set; }
+		public DbSet<RefreshToken> RefreshTokens { get; set; }
+
 
 		protected override void OnModelCreating(ModelBuilder builder)
 		{
@@ -60,6 +62,11 @@ namespace AccountLib.Data
 					  .WithMany(t => t.UserTenantRoles)
 					  .HasForeignKey(x => x.TenantId);
 			});
+
+			// Refresh Token
+			builder.Entity<RefreshToken>().ToTable("RefreshTokens")
+				.Property(u => u.Id)
+				.HasDefaultValueSql("NEWSEQUENTIALID()");
 		}
 	}
 }

@@ -1,18 +1,13 @@
-﻿using AccountLib.Configuration;
-using AccountLib.Contracts;
+﻿using AccountLib.Contracts;
 using AccountLib.Contracts.IdentityAccount.Request;
 using AccountLib.Contracts.JWT.Response;
 using AccountLib.Data;
 using AccountLib.Errors;
 using AccountLib.Models;
 using AccountLib.Services.EmailSenderService;
+using AccountLib.Services.JwtProvider;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
 
 namespace AccountLib.Services.IdentityAccountService
 {
@@ -20,42 +15,15 @@ namespace AccountLib.Services.IdentityAccountService
 										ApplicationDbContext db,
 										UserManager<ApplicationUser> userManager,
 										RoleManager<ApplicationRole> roleManager,
-										IOptions<JwtSettings> jwtOptions,
-										IEmailSender emailSender) : IIdentityAccountService
+										IEmailSender emailSender,
+										IJwtProvider jwtProvider) : IIdentityAccountService
 	{
 
 		private readonly UserManager<ApplicationUser> _userManager = userManager;
 		private readonly ApplicationDbContext _db = db;
 		private readonly RoleManager<ApplicationRole> _roleManager = roleManager;
-		private readonly JwtSettings _jwtSettings = jwtOptions.Value;
 		private readonly IEmailSender _emailSender = emailSender;
-
-
-		private async Task<string> GenerateJwtTokenAsync(ApplicationUser user)
-		{
-			var userRoles = await _userManager.GetRolesAsync(user);
-
-			var claims = new List<Claim>{
-				new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-				new(JwtRegisteredClaimNames.UniqueName, user.UserName ?? ""),
-				new(JwtRegisteredClaimNames.Email, user.Email ?? "")
-			};
-
-			claims.AddRange(userRoles.Select(role => new Claim(ClaimTypes.Role, role)));
-
-			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
-			var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-			var token = new JwtSecurityToken(
-				issuer: _jwtSettings.Issuer,
-				audience: _jwtSettings.Audience,
-				claims: claims,
-				expires: DateTime.UtcNow.AddMinutes(_jwtSettings.DurationInMinutes),
-				signingCredentials: creds
-			);
-
-			return new JwtSecurityTokenHandler().WriteToken(token);
-		}
+		private readonly IJwtProvider _jwtProvider = jwtProvider;
 
 
 		public async Task<ResultWithMessage> RegisterAsync(RegisterRequest request)
@@ -105,31 +73,48 @@ namespace AccountLib.Services.IdentityAccountService
 			};
 
 			var user = await _userManager.FindByEmailAsync(request.EmailOrUsername) ??
-				  await _userManager.FindByNameAsync(request.EmailOrUsername);
+					   await _userManager.FindByNameAsync(request.EmailOrUsername);
 
 			if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password))
 				return new ResultWithMessage(loginResult, IdentityAccountErrors.InvalidCredentials);
 
-			var token = await GenerateJwtTokenAsync(user);
+			// Generate JWT Token
+			var (jwtToken, jwtExpiry) = await _jwtProvider.GenerateJwtTokenAsync(user);
 
+			// Generate Refresh Token
+			var (refreshToken, refreshExpiry) = _jwtProvider.GenerateSecureToken();
+
+			var refreshEntity = new RefreshToken
+			{
+				Token = refreshToken,
+				ExpiryDate = refreshExpiry,
+				UserId = user.Id
+			};
+
+			_db.RefreshTokens.Add(refreshEntity);
+			await _db.SaveChangesAsync();
+
+			// Get Roles and Tenants
 			var userRoles = await _userManager.GetRolesAsync(user);
 
 			var userTenants = await _db.UserTenantRoles
-								.Include(utr => utr.Tenant)
-								.Where(utr => utr.UserId == user.Id)
-								.Select(utr => utr.Tenant!.Name)
-								.Distinct()
-								.ToListAsync();
+										.Include(utr => utr.Tenant)
+										.Where(utr => utr.UserId == user.Id)
+										.Select(utr => utr.Tenant!.Name)
+										.Distinct()
+										.ToListAsync();
 
 			loginResult = new LoginResponse
 			{
-				UserName = user.UserName,
-				Email = user.Email,
+				UserName = user.UserName!,
+				Email = user.Email!,
 				IsAuthenticated = true,
-				Token = token,
+				Token = jwtToken,
+				TokenExpiry = jwtExpiry,
+				RefreshToken = refreshToken,
+				RefreshTokenExpiry = refreshExpiry,
 				Roles = [.. userRoles],
-				Tenants = userTenants!,
-				TokenExpiry = DateTime.UtcNow.AddMinutes(_jwtSettings.DurationInMinutes)
+				Tenants = userTenants!
 			};
 
 			return new ResultWithMessage(loginResult, string.Empty);
@@ -191,6 +176,59 @@ namespace AccountLib.Services.IdentityAccountService
 				return new ResultWithMessage(null, result.Errors.First().Description);
 
 			return new ResultWithMessage(null, string.Empty);
+		}
+		public async Task<ResultWithMessage> RefreshTokenAsync(string refreshToken)
+		{
+			var token = await _db.RefreshTokens
+				.Include(t => t.User)
+				.ThenInclude(u => u.UserTenantRoles)
+				.ThenInclude(utr => utr.Tenant)
+				.Include(t => t.User)
+				.ThenInclude(u => u.UserTenantRoles)
+				.ThenInclude(utr => utr.Role)
+				.FirstOrDefaultAsync(t => t.Token == refreshToken && !t.IsRevoked);
+
+			if (token == null || token.ExpiryDate < DateTime.UtcNow)
+				return new ResultWithMessage(null, IdentityAccountErrors.InvalidOrExpiredRefreshToken);
+
+			var user = token.User;
+
+			if (user == null)
+				return new ResultWithMessage(null, IdentityAccountErrors.UserNotFound);
+
+			// Revoke the old token
+			token.IsRevoked = true;
+
+			// Generate new refresh token
+			var (newRefreshToken, refreshExpiry) = _jwtProvider.GenerateSecureToken();
+
+			var refreshEntity = new RefreshToken
+			{
+				Token = newRefreshToken,
+				ExpiryDate = refreshExpiry,
+				UserId = user.Id
+			};
+
+			_db.RefreshTokens.Add(refreshEntity);
+			await _db.SaveChangesAsync();
+
+			// Generate new JWT
+			var (jwtToken, jwtExpiry) = await _jwtProvider.GenerateJwtTokenAsync(user);
+
+			var result = new LoginResponse
+			{
+				Email = user.Email!,
+				UserName = user.UserName!,
+				IsAuthenticated = true,
+				Token = jwtToken,
+				TokenExpiry = jwtExpiry,
+				Roles = [.. _userManager.GetRolesAsync(user).Result],
+				Tenants = user.UserTenantRoles.Select(x => x.Tenant?.Name).Where(n => n != null).Distinct().ToList()!,
+				RefreshToken = refreshEntity.Token,
+				RefreshTokenExpiry = refreshEntity.ExpiryDate
+			};
+
+			return new ResultWithMessage(result, string.Empty);
 		}
 	}
 }

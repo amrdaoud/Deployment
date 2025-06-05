@@ -11,6 +11,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using AccountLib.Contracts;
 using AccountLib.Services.EmailSenderService;
+using AccountLib.Services.JwtProvider;
 namespace AccountLib.Abstractions
 {
 	public static class IdentityServiceCollectionExtensions
@@ -45,6 +46,7 @@ namespace AccountLib.Abstractions
 
 			services.AddScoped<IIdentityAccountService, IdentityAccountService>();
 			services.AddTransient<IEmailSender, EmailSender>();
+			services.AddScoped<IJwtProvider, JwtProvider>();
 
 			return services;
 		}

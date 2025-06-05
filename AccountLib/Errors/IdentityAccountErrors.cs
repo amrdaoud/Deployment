@@ -3,7 +3,8 @@
 	public class IdentityAccountErrors
 	{
 		public const string InvalidCredentials = "Invalid credentials";
-		public const string UserNotFound = "User not found for the requested email";
+		public const string UserNotFound = "User not found";
 		public const string InvalidEmail = "Invalid email";
+		public const string InvalidOrExpiredRefreshToken = "Invalid or expired refresh token";
 	}
 }
