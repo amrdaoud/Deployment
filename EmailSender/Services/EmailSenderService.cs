@@ -1,12 +1,11 @@
-﻿
-using AccountLib.Configuration;
+﻿using EmailSender.Configuration;
 using Microsoft.Extensions.Options;
 using System.Net.Mail;
 using System.Net;
 
-namespace AccountLib.Services.EmailSenderService
+namespace EmailSender.Services
 {
-	public class EmailSender(IOptions<EmailSettings> emailSettings) : IEmailSender
+	public class EmailSenderService(IOptions<EmailSettings> emailSettings) : IEmailSenderService
 	{
 		private readonly EmailSettings _settings = emailSettings.Value;
 

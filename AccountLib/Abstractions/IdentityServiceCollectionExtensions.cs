@@ -5,13 +5,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using AccountLib.Models;
 using AccountLib.Services.IdentityAccountService;
-using AccountLib.Configuration;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using AccountLib.Contracts;
-using AccountLib.Services.EmailSenderService;
 using AccountLib.Services.JwtProvider;
+using EmailSender.Services;
 namespace AccountLib.Abstractions
 {
 	public static class IdentityServiceCollectionExtensions
@@ -45,8 +44,8 @@ namespace AccountLib.Abstractions
 			});
 
 			services.AddScoped<IIdentityAccountService, IdentityAccountService>();
-			services.AddTransient<IEmailSender, EmailSender>();
 			services.AddScoped<IJwtProvider, JwtProvider>();
+			services.AddTransient<IEmailSenderService, EmailSenderService>();
 
 			return services;
 		}

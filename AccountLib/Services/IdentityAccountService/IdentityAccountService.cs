@@ -4,8 +4,8 @@ using AccountLib.Contracts.JWT.Response;
 using AccountLib.Data;
 using AccountLib.Errors;
 using AccountLib.Models;
-using AccountLib.Services.EmailSenderService;
 using AccountLib.Services.JwtProvider;
+using EmailSender.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,15 +15,15 @@ namespace AccountLib.Services.IdentityAccountService
 										ApplicationDbContext db,
 										UserManager<ApplicationUser> userManager,
 										RoleManager<ApplicationRole> roleManager,
-										IEmailSender emailSender,
-										IJwtProvider jwtProvider) : IIdentityAccountService
+										IJwtProvider jwtProvider,
+										IEmailSenderService emailSenderService) : IIdentityAccountService
 	{
 
 		private readonly UserManager<ApplicationUser> _userManager = userManager;
 		private readonly ApplicationDbContext _db = db;
 		private readonly RoleManager<ApplicationRole> _roleManager = roleManager;
-		private readonly IEmailSender _emailSender = emailSender;
 		private readonly IJwtProvider _jwtProvider = jwtProvider;
+		private readonly IEmailSenderService _emailSenderService = emailSenderService;
 
 
 		public async Task<ResultWithMessage> RegisterAsync(RegisterRequest request)
@@ -135,7 +135,7 @@ namespace AccountLib.Services.IdentityAccountService
 
 			try
 			{
-				await _emailSender.SendEmailAsync(request.Email, subject, body);
+				await _emailSenderService.SendEmailAsync(request.Email, subject, body);
 			}
 			catch (Exception ex)
 			{
