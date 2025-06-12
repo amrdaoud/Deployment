@@ -1,4 +1,5 @@
-﻿using AccountLib.Services.UserProfileService;
+﻿using AccountLib.Contracts.Users.Request;
+using AccountLib.Services.UserProfileService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -17,8 +18,10 @@ namespace DeploymentApi.Controllers
 		[HttpGet("profile")]
 		public async Task<IActionResult> GetProfile() => HandleResult(await _userProfileService.GetProfileAsync(GetCurrentUserId()));
 
-
 		[HttpGet("getUserRoles")]
 		public async Task<IActionResult> GetUserRoles() => HandleResult(await _userProfileService.GetUserRolesAsync(GetCurrentUserId()));
+
+		[HttpPost("updateProfile")]
+		public async Task<IActionResult> UpdateProfile(UpdateUserProfileRequest request) => HandleResult(await _userProfileService.UpdateProfileAsync(GetCurrentUserId(), request));
 	}
 }

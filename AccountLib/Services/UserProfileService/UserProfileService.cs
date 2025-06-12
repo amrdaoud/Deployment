@@ -1,4 +1,5 @@
 ﻿using AccountLib.Contracts;
+using AccountLib.Contracts.Users.Request;
 using AccountLib.Contracts.Users.Response;
 using AccountLib.Data;
 using AccountLib.Errors;
@@ -59,7 +60,6 @@ namespace AccountLib.Services.UserProfileService
 
 			return new ResultWithMessage<UserProfileResponse>(userProfileResponse, string.Empty);
 		}
-
 		public async Task<ResultWithMessage<ICollection<string>>> GetUserRolesAsync(string userId)
 		{
 			var user = await _userManager.FindByIdAsync(userId);
@@ -70,6 +70,22 @@ namespace AccountLib.Services.UserProfileService
 			var roles = await _userManager.GetRolesAsync(user);
 
 			return new ResultWithMessage<ICollection<string>>(roles, string.Empty);
+		}
+		public async Task<ResultWithMessage<bool>> UpdateProfileAsync(string userId, UpdateUserProfileRequest request)
+		{
+			var user = await _userManager.FindByIdAsync(userId);
+
+			if (user is null)
+				return new ResultWithMessage<bool>(false, UserErrors.InvalidUserId);
+
+			user.PhoneNumber = request.PhoneNumber ?? user.PhoneNumber;
+
+			var result = await _userManager.UpdateAsync(user);
+
+			if (!result.Succeeded)
+				return new ResultWithMessage<bool>(false, result.Errors.First().Description);
+
+			return new ResultWithMessage<bool>(true, string.Empty);
 		}
 	}
 }
