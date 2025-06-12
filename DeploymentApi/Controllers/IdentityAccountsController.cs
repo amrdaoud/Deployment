@@ -1,8 +1,9 @@
-﻿using AccountLib.Contracts.IdentityAccount.Request;
+﻿using AccountLib.Contracts;
+using AccountLib.Contracts.IdentityAccount.Request;
 using AccountLib.Services.IdentityAccountService;
 using Microsoft.AspNetCore.Mvc;
 
-namespace DeploymentApi.Controllers.IdentityAccountControllers
+namespace DeploymentApi.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]

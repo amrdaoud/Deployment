@@ -7,7 +7,7 @@ namespace DeploymentApi.Controllers
 	[ApiController]
 	public class BaseController : ControllerBase
 	{
-		protected IActionResult HandleResult(ResultWithMessage result)
+		protected IActionResult HandleResult<T>(ResultWithMessage<T> result)
 		{
 			if (!string.IsNullOrEmpty(result.Message))
 				return BadRequest(new { result.Message });

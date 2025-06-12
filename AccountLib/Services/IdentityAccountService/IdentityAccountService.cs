@@ -26,7 +26,7 @@ namespace AccountLib.Services.IdentityAccountService
 		private readonly IEmailSenderService _emailSenderService = emailSenderService;
 
 
-		public async Task<ResultWithMessage> RegisterAsync(RegisterRequest request)
+		public async Task<ResultWithMessage<bool>> RegisterAsync(RegisterRequest request)
 		{
 			var user = new ApplicationUser
 			{
@@ -41,7 +41,7 @@ namespace AccountLib.Services.IdentityAccountService
 			var result = await _userManager.CreateAsync(user, request.Password);
 
 			if (!result.Succeeded)
-				return new ResultWithMessage(null, result.Errors.First().Description);
+				return new ResultWithMessage<bool>(false, result.Errors.First().Description);
 
 			foreach (var tenantRole in request.TenantRoles)
 			{
@@ -63,9 +63,9 @@ namespace AccountLib.Services.IdentityAccountService
 
 			await _db.SaveChangesAsync();
 
-			return new ResultWithMessage(null, string.Empty);
+			return new ResultWithMessage<bool>(true, string.Empty);
 		}
-		public async Task<ResultWithMessage> LoginAsync(LoginRequest request)
+		public async Task<ResultWithMessage<LoginResponse>> LoginAsync(LoginRequest request)
 		{
 			var loginResult = new LoginResponse
 			{
@@ -76,7 +76,7 @@ namespace AccountLib.Services.IdentityAccountService
 					   await _userManager.FindByNameAsync(request.EmailOrUsername);
 
 			if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password))
-				return new ResultWithMessage(loginResult, IdentityAccountErrors.InvalidCredentials);
+				return new ResultWithMessage<LoginResponse>(loginResult, IdentityAccountErrors.InvalidCredentials);
 
 			// Generate JWT Token
 			var (jwtToken, jwtExpiry) = await _jwtProvider.GenerateJwtTokenAsync(user);
@@ -117,14 +117,14 @@ namespace AccountLib.Services.IdentityAccountService
 				Tenants = userTenants!
 			};
 
-			return new ResultWithMessage(loginResult, string.Empty);
+			return new ResultWithMessage<LoginResponse>(loginResult, string.Empty);
 		}
-		public async Task<ResultWithMessage> SendResetPasswordEmailAsync(SendResetPasswordEmailRequest request)
+		public async Task<ResultWithMessage<bool>> SendResetPasswordEmailAsync(SendResetPasswordEmailRequest request)
 		{
 			var user = await _userManager.FindByEmailAsync(request.Email);
 
 			if (user is null)
-				return new ResultWithMessage(null, IdentityAccountErrors.UserNotFound);
+				return new ResultWithMessage<bool>(false, IdentityAccountErrors.UserNotFound);
 
 			var token = await _userManager.GeneratePasswordResetTokenAsync(user);
 			var encodedToken = Uri.EscapeDataString(token);
@@ -139,17 +139,17 @@ namespace AccountLib.Services.IdentityAccountService
 			}
 			catch (Exception ex)
 			{
-				return new ResultWithMessage(null, ex.Message);
+				return new ResultWithMessage<bool>(false, ex.Message);
 			}
 
-			return new ResultWithMessage(null, string.Empty);
+			return new ResultWithMessage<bool>(true, string.Empty);
 		}
-		public async Task<ResultWithMessage> ResetPasswordAsync(ResetPasswordRequest request)
+		public async Task<ResultWithMessage<bool>> ResetPasswordAsync(ResetPasswordRequest request)
 		{
 			var user = await _userManager.FindByEmailAsync(request.Email);
 
 			if (user is null)
-				return new ResultWithMessage(null, IdentityAccountErrors.InvalidEmail);
+				return new ResultWithMessage<bool>(false, IdentityAccountErrors.InvalidEmail);
 
 			try
 			{
@@ -158,27 +158,33 @@ namespace AccountLib.Services.IdentityAccountService
 			}
 			catch (Exception ex)
 			{
-				return new ResultWithMessage(null, ex.Message);
+				return new ResultWithMessage<bool>(false, ex.Message);
 			}
 
-			return new ResultWithMessage(null, string.Empty);
+			return new ResultWithMessage<bool>(true, string.Empty);
 		}
-		public async Task<ResultWithMessage> ChangePasswordAsync(ChangePasswordRequest request)
+		public async Task<ResultWithMessage<bool>> ChangePasswordAsync(ChangePasswordRequest request)
 		{
 			var user = await _userManager.FindByEmailAsync(request.Email);
 
 			if (user is null)
-				return new ResultWithMessage(null, IdentityAccountErrors.UserNotFound);
+				return new ResultWithMessage<bool>(false, IdentityAccountErrors.UserNotFound);
 
 			var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
 
 			if (!result.Succeeded)
-				return new ResultWithMessage(null, result.Errors.First().Description);
+				return new ResultWithMessage<bool>(false, result.Errors.First().Description);
 
-			return new ResultWithMessage(null, string.Empty);
+			return new ResultWithMessage<bool>(false, string.Empty);
 		}
-		public async Task<ResultWithMessage> RefreshTokenAsync(string refreshToken)
+		public async Task<ResultWithMessage<LoginResponse>> RefreshTokenAsync(string refreshToken)
 		{
+			var loginResult = new LoginResponse
+			{
+				IsAuthenticated = false
+			};
+
+
 			var existingToken = await _db.RefreshTokens
 			.Include(r => r.User)
 			.ThenInclude(u => u.UserTenantRoles)
@@ -187,7 +193,7 @@ namespace AccountLib.Services.IdentityAccountService
 
 
 			if (existingToken == null || existingToken.ExpiryDate < DateTime.UtcNow)
-				return new ResultWithMessage(null, IdentityAccountErrors.InvalidRefreshToken);
+				return new ResultWithMessage<LoginResponse>(loginResult, IdentityAccountErrors.InvalidRefreshToken);
 
 			var user = existingToken.User!;
 			var (Token, ExpiryDate) = await _jwtProvider.GenerateJwtTokenAsync(user);
@@ -207,32 +213,30 @@ namespace AccountLib.Services.IdentityAccountService
 			_db.RefreshTokens.Add(refreshTokenEntity);
 			await _db.SaveChangesAsync();
 
-			var result = new LoginResponse
-			{
-				Email = user.Email!,
-				UserName = user.UserName!,
-				IsAuthenticated = true,
-				Token = Token,
-				TokenExpiry = ExpiryDate,
-				Roles = [.. (await _userManager.GetRolesAsync(user))],
-				Tenants = user.UserTenantRoles.Select(x => x.Tenant?.Name).Where(x => x != null).Distinct().ToList()!,
-				RefreshToken = newRefreshToken,
-				RefreshTokenExpiry = refreshExpiry
-			};
 
-			return new ResultWithMessage(result, string.Empty);
+			loginResult.Email = user.Email!;
+			loginResult.UserName = user.UserName!;
+			loginResult.IsAuthenticated = true;
+			loginResult.Token = Token;
+			loginResult.TokenExpiry = ExpiryDate;
+			loginResult.Roles = [.. (await _userManager.GetRolesAsync(user))];
+			loginResult.Tenants = user.UserTenantRoles.Select(x => x.Tenant?.Name).Where(x => x != null).Distinct().ToList()!;
+			loginResult.RefreshToken = newRefreshToken;
+			loginResult.RefreshTokenExpiry = refreshExpiry;
+
+			return new ResultWithMessage<LoginResponse>(loginResult, string.Empty);
 		}
-		public async Task<ResultWithMessage> LogoutAsync(string refreshToken)
+		public async Task<ResultWithMessage<bool>> LogoutAsync(string refreshToken)
 		{
 			var refreshTokenEntity = await _db.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == refreshToken);
 
 			if (refreshTokenEntity == null)
-				return new ResultWithMessage(null, IdentityAccountErrors.InvalidRefreshToken);
+				return new ResultWithMessage<bool>(false, IdentityAccountErrors.InvalidRefreshToken);
 
 			_db.RefreshTokens.Remove(refreshTokenEntity);
 			await _db.SaveChangesAsync();
 
-			return new ResultWithMessage(null, string.Empty);
+			return new ResultWithMessage<bool>(false, string.Empty);
 		}
 	}
 }

@@ -1,8 +1,6 @@
 using AccountLib.Data;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.EntityFrameworkCore;
 using AccountLib.Models;
 using AccountLib.Services.IdentityAccountService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -11,18 +9,14 @@ using System.Text;
 using AccountLib.Contracts;
 using EmailSender.Services;
 using AccountLib.Services.IdentityAccountService.JwtProvider;
-using AccountLib.Services.IdentityAccountService.UsersService;
+using AccountLib.Services.UserProfileService;
 namespace AccountLib.Abstractions
 {
 	public static class IdentityServiceCollectionExtensions
 	{
 		public static IServiceCollection AddAccountIdentity(this IServiceCollection services, AccountIdentityParams accountIdentityParams)
 		{
-			services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(accountIdentityParams.ConfigurationManager.GetConnectionString(accountIdentityParams.ConnectionString)));
-
-			services.AddIdentity<ApplicationUser, ApplicationRole>()
-				.AddEntityFrameworkStores<ApplicationDbContext>()
-				.AddDefaultTokenProviders();
+			services.AddIdentity<ApplicationUser, ApplicationRole>().AddEntityFrameworkStores<ApplicationDbContext>().AddDefaultTokenProviders();
 
 			// JWT Settings
 			services.AddAuthentication(options =>
@@ -46,7 +40,7 @@ namespace AccountLib.Abstractions
 
 			services.AddScoped<IIdentityAccountService, IdentityAccountService>();
 			services.AddScoped<IJwtProvider, JwtProvider>();
-			services.AddScoped<IUserService, UserService>();
+			services.AddScoped<IUserProfileService, UserProfileService>();
 			services.AddTransient<IEmailSenderService, EmailSenderService>();
 
 			return services;

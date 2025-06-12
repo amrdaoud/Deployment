@@ -1,11 +1,10 @@
 using AccountLib.Abstractions;
 using AccountLib.Configuration;
 using AccountLib.Contracts;
-using AccountLib.Infrastructure.Seed;
+using AccountLib.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Server.IISIntegration;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
-using System.Security.Claims;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,11 +16,12 @@ builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSet
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
 // Account Identity -> From AccountLib
 AccountIdentityParams accountIdentityParams = new()
 {
-	ConfigurationManager = builder.Configuration,
-	ConnectionString = "DefaultConnection",
 	JwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>()!
 };
 builder.Services.AddAccountIdentity(accountIdentityParams);
@@ -52,14 +52,10 @@ builder.Services.AddSwaggerGen(setup =>
 	{
 		{ jwtSecurityScheme, Array.Empty<string>() }
 	});
-
-	//setup.OperationFilter<SwaggerTenantParam>();
-
 });
 
-//builder.Services.AddAuthentication(IISDefaults.AuthenticationScheme).AddNegotiate();
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddTransient<ClaimsPrincipal>(s => s.GetService<IHttpContextAccessor>().HttpContext.User);
+builder.Services.AddTransient(s => s.GetService<IHttpContextAccessor>().HttpContext.User);
 
 var origins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 
