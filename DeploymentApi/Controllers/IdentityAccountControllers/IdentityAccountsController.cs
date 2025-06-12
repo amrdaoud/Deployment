@@ -11,21 +11,12 @@ namespace DeploymentApi.Controllers.IdentityAccountControllers
 		private readonly IIdentityAccountService _IdentityAccountService = IdentityAccountService;
 
 
-
 		[HttpPost("register")]
-		public async Task<IActionResult> Register(RegisterRequest request)
-		{
-			var result = await _IdentityAccountService.RegisterAsync(request);
-			return HandleResult(result);
-		}
+		public async Task<IActionResult> Register(RegisterRequest request) => HandleResult(await _IdentityAccountService.RegisterAsync(request));
 
 
 		[HttpPost("login")]
-		public async Task<IActionResult> Login(LoginRequest request)
-		{
-			var result = await _IdentityAccountService.LoginAsync(request);
-			return HandleResult(result);
-		}
+		public async Task<IActionResult> Login(LoginRequest request) => HandleResult(await _IdentityAccountService.LoginAsync(request));
 
 
 		[HttpPost("forgotPassword")]
@@ -43,11 +34,8 @@ namespace DeploymentApi.Controllers.IdentityAccountControllers
 
 
 		[HttpPost("resetPassword")]
-		public async Task<IActionResult> ResetPassword(ResetPasswordRequest request)
-		{
-			var result = await _IdentityAccountService.ResetPasswordAsync(request);
-			return HandleResult(result);
-		}
+		public async Task<IActionResult> ResetPassword(ResetPasswordRequest request) => HandleResult(await _IdentityAccountService.ResetPasswordAsync(request));
+
 
 		// for testing only
 		[HttpGet("reset-password-form")]
@@ -63,17 +51,15 @@ namespace DeploymentApi.Controllers.IdentityAccountControllers
 
 
 		[HttpPost("changePassword")]
-		public async Task<IActionResult> ChangePassword(ChangePasswordRequest request)
-		{
-			var result = await _IdentityAccountService.ChangePasswordAsync(request);
-			return HandleResult(result);
-		}
+		public async Task<IActionResult> ChangePassword(ChangePasswordRequest request) => HandleResult(await _IdentityAccountService.ChangePasswordAsync(request));
+
 
 		[HttpPost("refreshToken")]
-		public async Task<IActionResult> RefreshToken(string refreshToken)
-		{
-			var result = await _IdentityAccountService.RefreshTokenAsync(refreshToken);
-			return HandleResult(result);
-		}
+		public async Task<IActionResult> RefreshToken(string refreshToken) => HandleResult(await _IdentityAccountService.RefreshTokenAsync(refreshToken));
+
+
+
+		[HttpPost("logout")]
+		public async Task<IActionResult> Logout(string refreshToken) => HandleResult(await _IdentityAccountService.LogoutAsync(refreshToken));
 	}
 }

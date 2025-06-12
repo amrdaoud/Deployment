@@ -13,5 +13,6 @@ namespace AccountLib.Services.IdentityAccountService
 		Task<ResultWithMessage> ResetPasswordAsync(ResetPasswordRequest request);
 		Task<ResultWithMessage> ChangePasswordAsync(ChangePasswordRequest request);
 		Task<ResultWithMessage> RefreshTokenAsync(string refreshToken);
+		Task<ResultWithMessage> LogoutAsync(string refreshToken);
 	}
 }

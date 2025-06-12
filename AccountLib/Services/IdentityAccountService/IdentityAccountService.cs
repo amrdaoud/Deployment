@@ -222,5 +222,17 @@ namespace AccountLib.Services.IdentityAccountService
 
 			return new ResultWithMessage(result, string.Empty);
 		}
+		public async Task<ResultWithMessage> LogoutAsync(string refreshToken)
+		{
+			var refreshTokenEntity = await _db.RefreshTokens.FirstOrDefaultAsync(rt => rt.Token == refreshToken);
+
+			if (refreshTokenEntity == null)
+				return new ResultWithMessage(null, IdentityAccountErrors.InvalidRefreshToken);
+
+			_db.RefreshTokens.Remove(refreshTokenEntity);
+			await _db.SaveChangesAsync();
+
+			return new ResultWithMessage(null, string.Empty);
+		}
 	}
 }
