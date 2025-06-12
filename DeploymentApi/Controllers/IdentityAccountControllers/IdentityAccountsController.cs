@@ -68,5 +68,12 @@ namespace DeploymentApi.Controllers.IdentityAccountControllers
 			var result = await _IdentityAccountService.ChangePasswordAsync(request);
 			return HandleResult(result);
 		}
+
+		[HttpPost("refreshToken")]
+		public async Task<IActionResult> RefreshToken(string refreshToken)
+		{
+			var result = await _IdentityAccountService.RefreshTokenAsync(refreshToken);
+			return HandleResult(result);
+		}
 	}
 }

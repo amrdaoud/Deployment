@@ -179,53 +179,45 @@ namespace AccountLib.Services.IdentityAccountService
 		}
 		public async Task<ResultWithMessage> RefreshTokenAsync(string refreshToken)
 		{
-			var token = await _db.RefreshTokens
-				.Include(t => t.User)
-				.ThenInclude(u => u.UserTenantRoles)
-				.ThenInclude(utr => utr.Tenant)
-				.Include(t => t.User)
-				.ThenInclude(u => u.UserTenantRoles)
-				.ThenInclude(utr => utr.Role)
-				.FirstOrDefaultAsync(t => t.Token == refreshToken && !t.IsRevoked);
+			var existingToken = await _db.RefreshTokens
+			.Include(r => r.User)
+			.ThenInclude(u => u.UserTenantRoles)
+			.ThenInclude(utr => utr.Tenant)
+			.FirstOrDefaultAsync(t => t.Token == refreshToken && !t.IsRevoked);
 
-			if (token == null || token.ExpiryDate < DateTime.UtcNow)
-				return new ResultWithMessage(null, IdentityAccountErrors.InvalidOrExpiredRefreshToken);
 
-			var user = token.User;
+			if (existingToken == null || existingToken.ExpiryDate < DateTime.UtcNow)
+				return new ResultWithMessage(null, IdentityAccountErrors.InvalidRefreshToken);
 
-			if (user == null)
-				return new ResultWithMessage(null, IdentityAccountErrors.UserNotFound);
+			var user = existingToken.User!;
+			var (Token, ExpiryDate) = await _jwtProvider.GenerateJwtTokenAsync(user);
 
-			// Revoke the old token
-			token.IsRevoked = true;
-
-			// Generate new refresh token
 			var (newRefreshToken, refreshExpiry) = _jwtProvider.GenerateSecureToken();
 
-			var refreshEntity = new RefreshToken
+			var refreshTokenEntity = new RefreshToken
 			{
+				Id = Guid.NewGuid(),
 				Token = newRefreshToken,
 				ExpiryDate = refreshExpiry,
 				UserId = user.Id
 			};
 
-			_db.RefreshTokens.Add(refreshEntity);
-			await _db.SaveChangesAsync();
+			existingToken.IsRevoked = true;
 
-			// Generate new JWT
-			var (jwtToken, jwtExpiry) = await _jwtProvider.GenerateJwtTokenAsync(user);
+			_db.RefreshTokens.Add(refreshTokenEntity);
+			await _db.SaveChangesAsync();
 
 			var result = new LoginResponse
 			{
 				Email = user.Email!,
 				UserName = user.UserName!,
 				IsAuthenticated = true,
-				Token = jwtToken,
-				TokenExpiry = jwtExpiry,
-				Roles = [.. _userManager.GetRolesAsync(user).Result],
-				Tenants = user.UserTenantRoles.Select(x => x.Tenant?.Name).Where(n => n != null).Distinct().ToList()!,
-				RefreshToken = refreshEntity.Token,
-				RefreshTokenExpiry = refreshEntity.ExpiryDate
+				Token = Token,
+				TokenExpiry = ExpiryDate,
+				Roles = [.. (await _userManager.GetRolesAsync(user))],
+				Tenants = user.UserTenantRoles.Select(x => x.Tenant?.Name).Where(x => x != null).Distinct().ToList()!,
+				RefreshToken = newRefreshToken,
+				RefreshTokenExpiry = refreshExpiry
 			};
 
 			return new ResultWithMessage(result, string.Empty);

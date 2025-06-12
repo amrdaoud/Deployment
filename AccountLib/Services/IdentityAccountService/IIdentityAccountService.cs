@@ -12,8 +12,6 @@ namespace AccountLib.Services.IdentityAccountService
 		Task<ResultWithMessage> SendResetPasswordEmailAsync(SendResetPasswordEmailRequest request);
 		Task<ResultWithMessage> ResetPasswordAsync(ResetPasswordRequest request);
 		Task<ResultWithMessage> ChangePasswordAsync(ChangePasswordRequest request);
-
-		//Refresh Token
 		Task<ResultWithMessage> RefreshTokenAsync(string refreshToken);
 	}
 }
