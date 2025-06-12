@@ -8,7 +8,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace AccountLib.Services.JwtProvider
+namespace AccountLib.Services.IdentityAccountService.JwtProvider
 {
 	public class JwtProvider(IOptions<JwtSettings> jwtSettings, UserManager<ApplicationUser> userManager) : IJwtProvider
 	{

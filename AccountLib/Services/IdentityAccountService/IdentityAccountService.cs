@@ -4,7 +4,7 @@ using AccountLib.Contracts.JWT.Response;
 using AccountLib.Data;
 using AccountLib.Errors;
 using AccountLib.Models;
-using AccountLib.Services.JwtProvider;
+using AccountLib.Services.IdentityAccountService.JwtProvider;
 using EmailSender.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

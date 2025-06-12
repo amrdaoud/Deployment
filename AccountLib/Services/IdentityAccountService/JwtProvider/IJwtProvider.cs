@@ -1,6 +1,6 @@
 ﻿using AccountLib.Models;
 
-namespace AccountLib.Services.JwtProvider
+namespace AccountLib.Services.IdentityAccountService.JwtProvider
 {
 	public interface IJwtProvider
 	{

@@ -9,8 +9,9 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using AccountLib.Contracts;
-using AccountLib.Services.JwtProvider;
 using EmailSender.Services;
+using AccountLib.Services.IdentityAccountService.JwtProvider;
+using AccountLib.Services.IdentityAccountService.UsersService;
 namespace AccountLib.Abstractions
 {
 	public static class IdentityServiceCollectionExtensions
@@ -45,6 +46,7 @@ namespace AccountLib.Abstractions
 
 			services.AddScoped<IIdentityAccountService, IdentityAccountService>();
 			services.AddScoped<IJwtProvider, JwtProvider>();
+			services.AddScoped<IUserService, UserService>();
 			services.AddTransient<IEmailSenderService, EmailSenderService>();
 
 			return services;
