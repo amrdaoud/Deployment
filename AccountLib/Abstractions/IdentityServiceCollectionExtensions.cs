@@ -10,6 +10,7 @@ using AccountLib.Contracts;
 using EmailSender.Services;
 using AccountLib.Services.IdentityAccountService.JwtProvider;
 using AccountLib.Services.UserProfileService;
+using AccountLib.Services.UserManagementService;
 namespace AccountLib.Abstractions
 {
 	public static class IdentityServiceCollectionExtensions
@@ -40,8 +41,9 @@ namespace AccountLib.Abstractions
 
 			services.AddScoped<IIdentityAccountService, IdentityAccountService>();
 			services.AddScoped<IJwtProvider, JwtProvider>();
-			services.AddScoped<IUserProfileService, UserProfileService>();
 			services.AddTransient<IEmailSenderService, EmailSenderService>();
+			services.AddScoped<IUserProfileService, UserProfileService>();
+			services.AddScoped<IUserManagementService, UserManagementService>();
 
 			return services;
 		}
